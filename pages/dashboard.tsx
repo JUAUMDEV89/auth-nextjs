@@ -14,7 +14,6 @@ export default function Dashboard(){
           <h1>Dashboard</h1>
           <h2>Email: { user ? user.email : 'usuario não logado!'}</h2>
           { !user && <button onClick={handleRedirectSignIn}>Fazer login</button>  }
-          
         </>
     )
 }

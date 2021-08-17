@@ -1,7 +1,7 @@
-import { createContext, ReactNode, useReducer, useState } from 'react';
+import { createContext, ReactNode, useEffect, useState } from 'react';
 import { api } from '../services/api';
 import Route from 'next/router';
-import { setCookie } from 'nookies';
+import { setCookie, parseCookies } from 'nookies';
 
 interface authProps{
     children: ReactNode
@@ -32,6 +32,19 @@ export function AuthProvider({ children }: authProps){
 
    const isAuthenticated = !!user;
 
+   useEffect(()=>{
+    const {'nextAuth.token': token} = parseCookies();
+
+    if(token){
+     api.get('/me').then(response =>{
+       const { email, permissions, roles } = response.data;
+
+       setUser({ email, permissions, roles });
+     });
+    }
+  }, []);
+
+
    async function signIn({email, password}: signInProps){
       try{
         const response = await api.post('sessions', {
@@ -47,12 +60,12 @@ export function AuthProvider({ children }: authProps){
           roles
         });
 
-          setCookie(undefined, 'auth.token', token, {
+          setCookie(undefined, 'nextAuth.token', token, {
             maxAge: 60 * 60 * 24 * 30, //1 mouth
             path: '/'
           });
 
-          setCookie(undefined, 'auth.refreshToken', refreshToken, {
+          setCookie(undefined, 'nextAuth.refreshToken', refreshToken, {
             maxAge: 60 * 60 * 24 * 30, //1 mouth
             path: '/'
           });
