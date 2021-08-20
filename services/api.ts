@@ -4,6 +4,7 @@ import { parseCookies, setCookie } from 'nookies';
 import Router from 'next/router';
 
 let cookies = parseCookies();
+let isRefreshing = false;
 
 export const api = axios.create({
    baseURL: 'http://localhost:3333',
@@ -22,21 +23,28 @@ api.interceptors.response.use(response=>{
 
            const { 'nextauth.refreshToken': refreshToken } = cookies;
 
-           api.post('/refresh', {
-              refreshToken
-           }).then(response=>{
-              const { token } = response.data;
+           if(!isRefreshing){
 
-              setCookie(undefined, 'nextAuth.token', token, {
-               maxAge: 60 * 60 * 24 * 30, //1 mouth
-               path: '/'
-             });
-   
-             setCookie(undefined, 'nextAuth.refreshToken', refreshToken, {
-               maxAge: 60 * 60 * 24 * 30, //1 mouth
-               path: '/'
-             });
-           })
+            isRefreshing = true;
+
+            api.post('/refresh', {
+               refreshToken
+            }).then(response=>{
+               const { token } = response.data;
+ 
+               setCookie(undefined, 'nextAuth.token', token, {
+                maxAge: 60 * 60 * 24 * 30, //1 mouth
+                path: '/'
+              });
+    
+              setCookie(undefined, 'nextAuth.refreshToken', response.data.refreshToken, {
+                maxAge: 60 * 60 * 24 * 30, //1 mouth
+                path: '/'
+              });
+ 
+              api.defaults.headers['Authorization'] = `Bearer ${token}`
+            })
+           }
 
        }else{
           Router.push('/');
