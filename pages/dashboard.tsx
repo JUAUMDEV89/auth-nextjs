@@ -1,7 +1,15 @@
+import { useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import Router from 'next/router';
+import { api } from '../services/api';
 
 export default function Dashboard(){
+
+  useEffect(()=>{
+    api.get('/me').then((response)=>{
+       console.log(response.data);
+    })
+  }, []);
 
     const { user } = useAuth();
 
